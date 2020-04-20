@@ -13,3 +13,4 @@ Reliable transport layer over UDP
 8. use byte seqno
 9. store out of order packets (using byte array)
 10. implement fast retransmission on 3 dup acks
+11. use mutex for read buffer
