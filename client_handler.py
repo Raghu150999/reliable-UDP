@@ -4,6 +4,8 @@ from packet import Packet
 from listener import Listener
 from constants import MAX_PCKT_SIZE, POLL_INTERVAL, TIMEOUT
 from timer import Timer
+import datetime
+from threading import Lock
 
 class ClientHandler:
 
@@ -15,6 +17,7 @@ class ClientHandler:
         self.write_buffer = []
         self.read_buffer = b''
         self.timer = None
+        self.mutex = Lock()
         self.client_addr = client_addr
         self.connected = True
         self.closed = False
@@ -25,6 +28,10 @@ class ClientHandler:
         pckt = Packet()
         pckt.syn = 1
         pckt.ack = 1
+        if self.debug:
+            print(datetime.datetime.now().time())
+            print("Packet sent:")
+            print(pckt)
         self.sock.sendto(pckt.encode(), self.client_addr)
 
     def send_finack(self):
@@ -33,6 +40,10 @@ class ClientHandler:
         pckt = Packet()
         pckt.fin = 1
         pckt.ack = 1
+        if self.debug:
+            print(datetime.datetime.now().time())
+            print("Packet sent:")
+            print(pckt)
         self.sock.sendto(pckt.encode(), self.client_addr)
 
     def read_data(self, pckt, source_addr):
@@ -40,6 +51,8 @@ class ClientHandler:
         Receive data from listener and process
         '''
         if self.debug:
+            print(datetime.datetime.now().time())
+            print("Packet received:")
             print(pckt)
         # Handle SYN
         if pckt.syn:
@@ -60,8 +73,13 @@ class ClientHandler:
         # Discarding out of order packets for now
         if pckt.ack:
             count = pckt.ackno - self.send_seq
+            if count <= 0:
+                return
+            # Access write buffer with mutex 
+            self.mutex.acquire()
             self.write_buffer = self.write_buffer[count:]
             self.send_seq = pckt.ackno
+            self.mutex.release()
         else:
             if pckt.seqno == self.recv_seq:
                 self.read_buffer += pckt.payload
@@ -72,9 +90,15 @@ class ClientHandler:
             self.sock.sendto(pckt.encode(), source_addr)
 
     def write(self, pckt):
+        self.mutex.acquire()
         pckt.seqno = self.send_seq + len(self.write_buffer)
-        self.sock.sendto(pckt.encode(), self.client_addr)
+        if self.debug:
+            print(datetime.datetime.now().time())
+            print("Packet sent:")
+            print(pckt)
         self.write_buffer.append(pckt)
+        self.mutex.release()
+        self.sock.sendto(pckt.encode(), self.client_addr)
         if self.timer == None or not self.timer.running:
             self.timer = Timer(self.timeout, TIMEOUT)
             self.timer.start()
@@ -83,6 +107,10 @@ class ClientHandler:
         if len(self.write_buffer) == 0:
             return
         for pckt in self.write_buffer:
+            if self.debug:
+                print(datetime.datetime.now().time())
+                print("Packet sent:")
+                print(pckt)
             self.sock.sendto(pckt.encode(), self.client_addr)
         self.timer = Timer(self.timeout, TIMEOUT)
         self.timer.start()

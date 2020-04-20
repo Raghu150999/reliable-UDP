@@ -4,6 +4,8 @@ from packet import Packet
 from listener import Listener
 from constants import MAX_PCKT_SIZE, POLL_INTERVAL, TIMEOUT
 from timer import Timer
+import datetime
+from threading import Lock
 
 class RUDPClient:
     
@@ -12,6 +14,7 @@ class RUDPClient:
         self.send_seq = 0
         self.recv_seq = 0
         self.write_buffer = []
+        self.mutex = Lock()
         self.read_buffer = b''
         self.connected = False
         self.closed = False
@@ -46,6 +49,10 @@ class RUDPClient:
         pckt = Packet()
         pckt.fin = 1
         pckt.ack = 1
+        if self.debug:
+            print(datetime.datetime.now().time())
+            print("Packet sent:")
+            print(pckt)
         self.sock.sendto(pckt.encode(), self.server_addr)
 
     def read_data(self, pckt, source_addr):
@@ -54,6 +61,8 @@ class RUDPClient:
         Note: this function is upcalled by the listener thread
         '''
         if self.debug:
+            print(datetime.datetime.now().time())
+            print("Packet received:")
             print(pckt)
         
         # Ignore unknown response
@@ -79,8 +88,13 @@ class RUDPClient:
         # Discarding out of order packets for now
         if pckt.ack:
             count = pckt.ackno - self.send_seq
+            if count <= 0:
+                return
+            # Access write buffer with mutex 
+            self.mutex.acquire()
             self.write_buffer = self.write_buffer[count:]
             self.send_seq = pckt.ackno
+            self.mutex.release()
         else:
             if pckt.seqno == self.recv_seq:
                 self.read_buffer += pckt.payload
@@ -91,9 +105,16 @@ class RUDPClient:
             self.sock.sendto(pckt.encode(), source_addr)
 
     def write(self, pckt):
+        # Access write buffer with mutex
+        self.mutex.acquire()
         pckt.seqno = self.send_seq + len(self.write_buffer)
-        self.sock.sendto(pckt.encode(), self.server_addr)
+        if self.debug:
+            print(datetime.datetime.now().time())
+            print("Packet sent:")
+            print(pckt)
         self.write_buffer.append(pckt)
+        self.mutex.release()
+        self.sock.sendto(pckt.encode(), self.server_addr)
         if self.timer == None or not self.timer.running:
             self.timer = Timer(self.timeout, TIMEOUT)
             self.timer.start()
@@ -102,6 +123,10 @@ class RUDPClient:
         if len(self.write_buffer) == 0:
             return
         for pckt in self.write_buffer:
+            if self.debug:
+                print(datetime.datetime.now().time())
+                print("Packet sent:")
+                print(pckt)
             self.sock.sendto(pckt.encode(), self.server_addr)
         self.timer = Timer(self.timeout, TIMEOUT)
         self.timer.start()
