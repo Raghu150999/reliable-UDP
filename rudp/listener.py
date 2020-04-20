@@ -1,7 +1,7 @@
 import socket
 import threading, time
-from packet import Packet
-from constants import MAX_BYTES, POLL_INTERVAL
+from .packet import Packet
+from .constants import MAX_BYTES, POLL_INTERVAL
 
 class Listener(threading.Thread):
     '''

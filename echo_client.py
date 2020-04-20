@@ -1,4 +1,4 @@
-from rudp_client import RUDPClient
+from rudp.rudp_client import RUDPClient
 import struct
 
 def echo_client(addr):

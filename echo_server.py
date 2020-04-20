@@ -1,26 +1,29 @@
-from rudp_server import RUDPServer 
+from rudp.rudp_server import RUDPServer
 import time
 import struct
+from threading import Thread
+
+def handle_client(sock, addr):
+    while True:
+        data = sock.recv(2)
+        if not data:
+            break
+        print('Client message:', data.decode('ascii'), end='\r')
+        sock.send(data)
+    print('Client finished...', addr)
+    sock.close()
 
 def echo_server(addr):
     '''
-    Simple echo server
+    Simple echo server, handling multiple clients with multi-threading
     '''
     server = RUDPServer()
     server.bind(addr)
     server.listen()
-
-    client, addr = server.accept()
-    print('Client connected...', addr)
-
     while True:
-        data = client.recv(2)
-        if not data:
-            break
-        print('Client message:', data.decode('ascii'), end='\r')
-        client.send(data)
-    client.close()
-    server.close()
+        client, addr = server.accept()
+        print('Client connected...', addr)
+        Thread(target=handle_client, args=(client, addr)).start()
 
 def addition_server(addr):
     '''
