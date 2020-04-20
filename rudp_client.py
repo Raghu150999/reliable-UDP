@@ -197,7 +197,6 @@ class RUDPClient:
         '''
         Close connection (Client initiates closing connection)
         '''
-        # TODO: handle case when server disconnects without acking the FIN
         self.read_buffer = b''
         self.closed = True
         if self.connected:
@@ -209,12 +208,12 @@ class RUDPClient:
             pckt = Packet()
             pckt.fin = 1
             self.write(pckt)
-            # Wait for FIN-ACK
-            while len(self.write_buffer) > 0:
+            # Wait for fin-ack atmost 100 * POLL_INTERVAL
+            cnt = 0
+            while len(self.write_buffer) > 0 and cnt < 100:
                 time.sleep(POLL_INTERVAL)
-        if self.timer != None and self.timer.running:
-            self.timer.finish()
-        self.listener.finish()
+                cnt += 1
+        self.finack()
         # wait for listener to finish
         time.sleep(2*POLL_INTERVAL)
 

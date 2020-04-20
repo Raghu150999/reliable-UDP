@@ -145,7 +145,6 @@ class ClientHandler:
             self.write(pckt)
 
     def finack(self):
-        print('Received FIN-ACK')
         self.write_buffer = []
         if self.timer != None and self.timer.running:
             self.timer.finish()
@@ -164,7 +163,10 @@ class ClientHandler:
             pckt = Packet()
             pckt.fin = 1
             self.write(pckt)
-            # Wait for fin-ack
-            while len(self.write_buffer) > 0:
+            # Wait for fin-ack atmost 100 * POLL_INTERVAL
+            cnt = 0
+            while len(self.write_buffer) > 0 and cnt < 100:
                 time.sleep(POLL_INTERVAL)
+                cnt += 1
+        self.finack()
         self.rudp.close_connection(self.client_addr)

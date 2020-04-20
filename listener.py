@@ -13,9 +13,9 @@ class Listener(threading.Thread):
         self.running = True
         
     def run(self):
-        # TODO: perfrom upcall on a separate thread
+        # TODO: perform upcall on a separate thread (?)
         self.rudp_sock.sock.setblocking(False)
-        print('Listener started...')
+        # start listener
         while True:
             # Receive datagram
             try:
@@ -25,8 +25,7 @@ class Listener(threading.Thread):
             except socket.error as e:
                 time.sleep(POLL_INTERVAL)
             if self.running == False:
-                print("Listener finished...")
-                exit(0)
+                return
 
     def finish(self):
         self.running = False
