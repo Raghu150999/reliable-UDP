@@ -4,7 +4,7 @@ Reliable transport layer over UDP
 
 ## TODO:
 1. convert write buffer to python queue
-2. do proper close handling
+2. do proper close handling for server
 3. create testing scripts
 4. handling if no response sent from peer (timeout)
 5. raise connection refused error if server is accepting SYN requests
