@@ -3,14 +3,13 @@ Reliable transport layer over UDP
 
 
 ## TODO:
-1. convert write buffer to python queue
-2. do proper close handling for server
-3. create testing scripts
-4. handling if no response sent from peer (timeout)
-5. raise connection refused error if server is accepting SYN requests
-6. use mutex wherever possible, instead of time.sleep
-7. implement piggy backed ack
-8. use byte seqno
-9. store out of order packets (using byte array)
-10. implement fast retransmission on 3 dup acks
-11. use mutex for read buffer
+- convert write buffer to python queue
+- create testing scripts
+- raise connection refused error if server is not accepting SYN requests
+- use mutex wherever possible, instead of sleep
+- implement piggy backed ack
+- use byte seqno
+- store out of order packets (using byte array)
+- implement fast retransmission on 3 dup acks
+- use mutex for read buffer
+- maintain max buffer size, block send if excedes max buffer size

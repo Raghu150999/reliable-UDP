@@ -34,6 +34,24 @@ def addition_client(addr):
         print('Numbers are:', a, b, s, end='\r')
     client.close()
 
+def echo2_client(addr):
+    client = RUDPClient()
+    client.connect(addr)
+    print('Connection established...')
+
+    # rapid send
+    for i in range(100):
+        client.send('hi'.encode('ascii'))
+    print('send complete!')
+
+    # recv all replies
+    for i in range(100):
+        msg = client.recv(2).decode('ascii')
+        assert(msg == 'hi')
+        print(i, 'Server reply:', msg, end='\r')
+    print()
+    client.close()
+
 if __name__ == "__main__":
     # addition_client(("127.0.0.1", 8000))
-    echo_client(("127.0.0.1", 8000))
+    echo2_client(("127.0.0.1", 8000))
