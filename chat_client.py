@@ -51,12 +51,21 @@ def read_message(client):
             break
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser('chat server client end')
+    parser = argparse.ArgumentParser('Chat Server client-end')
     parser.add_argument('--ip', type=str, default='127.0.0.1', help='server IP')
     parser.add_argument('--port', type=int, default=8000, help='server port')
     parser.add_argument('--uname', type=str, help='username', required=True)
     args = parser.parse_args()
+    
+    print("-" * 60)
     client = Client((args.ip, args.port), args.uname)
+    print('Joined chat server...')
+    print("Type your message in a single line, hit ENTER to send")
+    print("Use '!exit' as message to quit")
+    print("-" * 60)
+    print()
+
+    # start receiver thread (listen to user input)
     Thread(target=read_message, args=(client,)).start()
 
     while True:
