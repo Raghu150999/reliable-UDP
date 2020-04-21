@@ -2,7 +2,7 @@ import socket
 import time
 from .packet import Packet
 from .listener import Listener
-from .constants import MAX_PCKT_SIZE, POLL_INTERVAL, TIMEOUT
+from .constants import MAX_PCKT_SIZE, POLL_INTERVAL, TIMEOUT, RWND, MAX_BYTES
 from .timer import Timer
 import datetime
 from threading import Lock
@@ -24,6 +24,8 @@ class ClientHandler:
         self.connected = True
         self.closed = False
         self.debug = debug
+        # size of outbound packets
+        self.buff = 0
         self.send_synack()
 
     def send_synack(self):
@@ -78,6 +80,9 @@ class ClientHandler:
             count = pckt.ackno - self.send_seq
             if count <= 0:
                 return
+            sent = self.write_buffer[:count]
+            for p in sent:
+                self.buff -= len(p.payload)
             # Access write buffer with mutex 
             self.mutex.acquire()
             self.write_buffer = self.write_buffer[count:]
@@ -111,12 +116,16 @@ class ClientHandler:
     def timeout(self):
         if len(self.write_buffer) == 0:
             return
+        cnt = 0
         for pckt in self.write_buffer:
+            cnt += 1
             if self.debug:
                 print(datetime.datetime.now().time())
                 print("Packet sent:")
                 print(pckt)
             self.sock.sendto(pckt.encode(), self.client_addr)
+            if cnt >= RWND:
+                break
         self.timer = Timer(self.timeout, TIMEOUT)
         self.timer.start()
 
@@ -146,6 +155,10 @@ class ClientHandler:
         while len(data) > 0:
             rem = min(len(data), MAX_PCKT_SIZE)
             payload = data[:rem]
+            # wait till receiver has acked enough bytes
+            while self.buff + rem > MAX_BYTES:
+                time.sleep(POLL_INTERVAL)
+            self.buff += rem
             data = data[rem:]
             pckt = Packet()
             pckt.payload = payload

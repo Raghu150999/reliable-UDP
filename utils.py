@@ -22,6 +22,9 @@ class Util:
     
     def recv(self):
         l = self.sock.recv(4)
+        if not l:
+            return None
+        assert(len(l) == 4)
         l, = struct.unpack('!I', l)
         data = self.recvall(l)
         return data
@@ -32,6 +35,5 @@ class Util:
         l = len(data)
         l = struct.pack('!I', l)
         databytes = l
-        self.sock.send(l)
-        databytes = data
+        databytes += data
         self.sock.send(databytes)

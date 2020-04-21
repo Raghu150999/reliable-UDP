@@ -2,7 +2,7 @@ import socket
 import time
 from .packet import Packet
 from .listener import Listener
-from .constants import MAX_PCKT_SIZE, POLL_INTERVAL, TIMEOUT
+from .constants import MAX_PCKT_SIZE, POLL_INTERVAL, TIMEOUT, RWND, MAX_BYTES
 from .timer import Timer
 import datetime
 from threading import Lock
@@ -23,6 +23,7 @@ class RUDPClient:
         self.connected = False
         self.closed = False
         self.timer = None
+        self.buff = 0
         # flag to print debug logs
         self.debug = debug
 
@@ -100,6 +101,9 @@ class RUDPClient:
             count = pckt.ackno - self.send_seq
             if count <= 0:
                 return
+            sent = self.write_buffer[:count]
+            for p in sent:
+                self.buff -= len(p.payload)
             # Access write buffer with mutex 
             self.mutex.acquire()
             # remove acked packets from buffer
@@ -144,13 +148,17 @@ class RUDPClient:
         # no packet to send
         if len(self.write_buffer) == 0:
             return
+        cnt = 0
         # retransmit all packets in write buffer
         for pckt in self.write_buffer:
+            cnt += 1
             if self.debug:
                 print(datetime.datetime.now().time())
                 print("Packet sent:")
                 print(pckt)
             self.sock.sendto(pckt.encode(), self.server_addr)
+            if cnt >= RWND:
+                break
         # restart timer
         self.timer = Timer(self.timeout, TIMEOUT)
         self.timer.start()
@@ -183,6 +191,10 @@ class RUDPClient:
             # break into packet of maximum size MAX_PCKT_SIZE
             rem = min(len(data), MAX_PCKT_SIZE)
             payload = data[:rem]
+            # wait till receiver has acked enough bytes
+            while self.buff + rem > MAX_BYTES:
+                time.sleep(POLL_INTERVAL)
+            self.buff += rem
             data = data[rem:]
             pckt = Packet()
             pckt.payload = payload
