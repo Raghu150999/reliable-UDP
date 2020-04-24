@@ -18,9 +18,11 @@ def client(addr, filename):
     start_time = time.time()
     idx = 0
     while True:
+        start = time.time()
         data = u.recv()
         idx += 1
-        print('Block:', idx, end='\r')
+        end = time.time()
+        print('Block:', idx, end - start, end='\r')
         if not data:
             print('Finished file transfer...')
             end_time = time.time()
