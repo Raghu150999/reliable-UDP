@@ -14,3 +14,5 @@ Reliable transport layer over UDP
 - use mutex for read buffer
 - maintain max buffer size, block send if excedes max buffer size
 - build chat application
+- implement byte stream instead of write buffer
+- handle out of order packet efficiently

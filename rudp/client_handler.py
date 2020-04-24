@@ -17,6 +17,7 @@ class ClientHandler:
         self.write_buffer = []
         self.read_buffer = b''
         self.timer = None
+        self.order = [None] * MAX_BYTES
         # mutex locks for write and read buffers
         self.mutex = Lock()
         self.mutexr = Lock()
@@ -89,14 +90,29 @@ class ClientHandler:
             self.send_seq = pckt.ackno
             self.mutex.release()
         else:
+            idx = pckt.seqno % MAX_BYTES
+            if self.order[idx] == None:
+                self.order[idx] = pckt
+            # if received expected packet update recv_seq no
             if pckt.seqno == self.recv_seq:
+                start = idx
+                data = b''
+                while True:
+                    if self.order[start] == None:
+                        break
+                    data += self.order[start].payload
+                    self.order[start] = None
+                    start += 1
+                    if start > MAX_BYTES:
+                        start -= MAX_BYTES
                 self.mutexr.acquire()
-                self.read_buffer += pckt.payload
-                self.recv_seq += 1
+                self.read_buffer += data
                 self.mutexr.release()
+                self.recv_seq = start
             pckt = Packet()
             pckt.ack = 1
             pckt.ackno = self.recv_seq
+            # send ack 
             self.sock.sendto(pckt.encode(), source_addr)
 
     def write(self, pckt):

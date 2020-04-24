@@ -15,7 +15,10 @@ class RUDPClient:
         self.send_seq = 0
         # seq no of the next packet to be received
         self.recv_seq = 0
+        # buffer to store yet to be sent packets (unacked)
         self.write_buffer = []
+        # data structure for storing out of order packets
+        self.order = [None] * MAX_BYTES
         # mutex locks for write and read buffers
         self.mutex = Lock()
         self.mutexr = Lock()
@@ -26,6 +29,7 @@ class RUDPClient:
         self.buff = 0
         # flag to print debug logs
         self.debug = debug
+        self.dropped = 0
 
     def connect(self, address):
         # Create a SYN packet
@@ -111,12 +115,28 @@ class RUDPClient:
             self.send_seq = pckt.ackno
             self.mutex.release()
         else:
+            idx = pckt.seqno % MAX_BYTES
+            if self.order[idx] == None:
+                self.order[idx] = pckt
+            else:
+                self.dropped += 1
+                print(self.dropped)
             # if received expected packet update recv_seq no
             if pckt.seqno == self.recv_seq:
+                start = idx
+                data = b''
+                while True:
+                    if self.order[start] == None:
+                        break
+                    data += self.order[start].payload
+                    self.order[start] = None
+                    start += 1
+                    if start > MAX_BYTES:
+                        start -= MAX_BYTES
                 self.mutexr.acquire()
-                self.read_buffer += pckt.payload
-                self.recv_seq += 1
+                self.read_buffer += data
                 self.mutexr.release()
+                self.recv_seq = start
             pckt = Packet()
             pckt.ack = 1
             pckt.ackno = self.recv_seq

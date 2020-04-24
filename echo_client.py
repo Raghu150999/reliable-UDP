@@ -1,5 +1,6 @@
 from rudp.rudp_client import RUDPClient
 import struct
+import time
 
 def echo_client(addr):
     client = RUDPClient()
@@ -53,5 +54,8 @@ def echo2_client(addr):
     client.close()
 
 if __name__ == "__main__":
+    start = time.time()
     # addition_client(("127.0.0.1", 8000))
-    echo2_client(("127.0.0.1", 8000))
+    echo_client(("127.0.0.1", 8000))
+    end = time.time()
+    print(end - start)

@@ -33,4 +33,4 @@ def client(addr, filename):
 
 
 if __name__ == "__main__":
-    client(("127.0.0.1", 8000), 'test.mp4')
+    client(("127.0.0.1", 8000), 'test2.mp4')
