@@ -37,7 +37,7 @@ def handle_client(sock, addr):
     print('Something went wrong...', addr)
 
 def server(addr):
-    sock = RUDPServer(debug=True)
+    sock = RUDPServer()
     sock.bind(addr)
     sock.listen()
 

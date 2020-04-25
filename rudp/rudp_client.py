@@ -133,18 +133,20 @@ class RUDPClient:
             if pckt.seqno == self.recv_seq:
                 start = idx
                 data = b''
+                b = pckt.seqno
                 while True:
                     if self.order[start] == None:
                         break
                     data += self.order[start].payload
                     self.order[start] = None
                     start += 1
+                    b += 1
                     if start >= MAX_BYTES:
                         start -= MAX_BYTES
                 self.mutexr.acquire()
                 self.read_buffer += data
                 self.mutexr.release()
-                self.recv_seq = start
+                self.recv_seq = b
             pckt = Packet()
             pckt.ack = 1
             pckt.ackno = self.recv_seq
@@ -180,10 +182,15 @@ class RUDPClient:
         cnt = 0
         i = self.send_seq
         idx = i % MAX_BYTES
+        b = self.nxt_send_seq
         # retransmission of unacked packets
-        while i < self.nxt_send_seq:
+        while i < b:
             # packet already acked
             if self.write_buffer[idx] == None:
+                i += 1
+                idx += 1
+                if idx >= MAX_BYTES:
+                    idx -= MAX_BYTES
                 continue
             cnt += 1
             pckt = self.write_buffer[idx]

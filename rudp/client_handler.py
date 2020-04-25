@@ -85,9 +85,9 @@ class ClientHandler:
                 return
             # Access write buffer with mutex 
             # remove acked packets from buffer
+            self.mutex.acquire()
             idx = self.send_seq % MAX_BYTES
             v = self.send_seq
-            self.mutex.acquire()
             while v < pckt.ackno:
                 if self.write_buffer[idx]:
                     self.buff -= len(self.write_buffer[idx].payload)
@@ -110,17 +110,19 @@ class ClientHandler:
             if pckt.seqno == self.recv_seq:
                 start = idx
                 data = b''
+                b = pckt.seqno
                 while True:
                     if self.order[start] == None:
                         break
                     data += self.order[start].payload
                     self.order[start] = None
                     start += 1
+                    b += 1
                     if start >= MAX_BYTES:
                         start -= MAX_BYTES
                 self.mutexr.acquire()
                 self.read_buffer += data
-                self.recv_seq = start
+                self.recv_seq = b
                 self.mutexr.release()
             pckt = Packet()
             pckt.ack = 1
@@ -133,7 +135,7 @@ class ClientHandler:
         self.mutex.acquire()
         # get seqno for the current packet (seq_no of buffer start + len of buffer)
         pckt.seqno = self.nxt_send_seq
-        # append to write buffer for retransmission (if required)
+        # add to write buffer for retransmission (if required)
         self.write_buffer[self.nxt_send_seq % MAX_BYTES] = pckt
         self.nxt_send_seq += 1
         self.mutex.release()
@@ -151,18 +153,21 @@ class ClientHandler:
         '''
         Callback called on timeout event
         '''
-        print(self.send_seq, self.nxt_send_seq)
         # no packet to send
         if self.send_seq == self.nxt_send_seq:
             return
-        print('2')
         cnt = 0
         i = self.send_seq
         idx = i % MAX_BYTES
+        b = self.nxt_send_seq
         # retransmission of unacked packets
-        while i < self.nxt_send_seq:
+        while i < b:
             # packet already acked
             if self.write_buffer[idx] == None:
+                i += 1
+                idx += 1
+                if idx >= MAX_BYTES:
+                    idx -= MAX_BYTES
                 continue
             cnt += 1
             pckt = self.write_buffer[idx]
