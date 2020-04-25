@@ -39,11 +39,17 @@ sock = RUDPClient()
 ``` python
 sock.connect(server_addr)
 ```
-*Here, server_addr is like ("127.0.0.1", 8000) i.e. (ip, port) tuple*
+*Here, server_addr is like `("127.0.0.1", 8000)` i.e. (ip, port) tuple*
 
 ### Closing socket
 ``` python 
 sock.close()
+```
+
+## Emulating network parameters on localhost
+``` bash
+$ sudo ifconfig lo mtu 1500
+$ sudo tc qdisc change dev lo root netem delay 50ms 10ms loss 5% corrupt 5% duplicate 1%
 ```
 
 ## TODO:
