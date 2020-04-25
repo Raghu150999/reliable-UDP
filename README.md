@@ -16,3 +16,18 @@ Reliable transport layer over UDP
 - build chat application
 - implement byte stream instead of write buffer
 - handle out of order packet efficiently
+
+## Results:
+
+Comparison of TCP vs RUDP in terms of:
+1. Time taken for file transfer (s)
+2. Data transmitted (including retransmission) (MB)
+
+We use a MTU of 1500 bytes for network emulation
+
+file size 8.7 MB
+
+delay (ms) | jitter (ms) | loss (%) | TCP time(s) | RUDP time(s) | TCP data(MB) | RUDP data(MB)
+-----------|-------------|----------|-------------|--------------|--------------|----------------
+   50      |    10       |     5    |    110      |    60        |     9        |      12
+   50      |    10       |     20   |    

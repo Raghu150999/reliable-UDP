@@ -37,13 +37,14 @@ def handle_client(sock, addr):
     print('Something went wrong...', addr)
 
 def server(addr):
-    sock = RUDPServer()
+    sock = RUDPServer(debug=True)
     sock.bind(addr)
     sock.listen()
 
     while True:
         sc, addr = sock.accept()
-        Thread(target=handle_client, args=(sc, addr)).start()
+        # Thread(target=handle_client, args=(sc, addr)).start()
+        handle_client(sc, addr)
 
 if __name__ == "__main__":
     server(("127.0.0.1", 8000))

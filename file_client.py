@@ -3,7 +3,7 @@ from utils import Util
 import time
 
 def client(addr, filename):
-    sock = RUDPClient()
+    sock = RUDPClient(debug=True)
     sock.connect(addr)
     print('Connection established...')
     u = Util(sock)
