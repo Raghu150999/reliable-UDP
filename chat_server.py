@@ -27,7 +27,7 @@ class Server:
             self.clients[addr] = Util(sc)
             Thread(target=self.handle_client, args=(sc, addr)).start()
     
-    def broadcast(self, msg, sender='SYSTEM'):
+    def broadcast(self, msg, sender='SYSTEM', sender_addr=None):
         '''
         Broadcast message to all participants
         Args:
@@ -38,6 +38,9 @@ class Server:
         self.mutex.acquire()
         # broadcast to everyone
         for caddr in self.clients:
+            # don't broadcast to sender
+            if caddr == sender_addr:
+                continue
             try:
                 self.clients[caddr].send(send_msg)
             except Exception as e:
@@ -62,7 +65,7 @@ class Server:
                 self.mutex.release()
                 self.broadcast(f'{username} left')
                 return
-            self.broadcast(msg, sender=username)
+            self.broadcast(msg, sender=username, sender_addr=addr)
 
 if __name__ == "__main__":
     server = Server(("127.0.0.1", 8000))

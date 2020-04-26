@@ -92,3 +92,6 @@ delay (ms) | jitter (ms) | loss (%) | TCP time(s) | RUDP time(s) | TCP data(MB) 
 
 *Although, RUDP performs better in terms of time for transfer. However, it does more data transfer than TCP*
 
+## Framework:
+
+<img src="plots/rudp-framework.png?raw=true" width="800">
