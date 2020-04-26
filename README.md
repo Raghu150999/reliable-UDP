@@ -47,9 +47,19 @@ sock.close()
 ```
 
 ## Emulating network parameters on localhost
+Set MTU (Maximum Transmission Unit):
 ``` bash
 $ sudo ifconfig lo mtu 1500
-$ sudo tc qdisc change dev lo root netem delay 50ms 10ms loss 5% corrupt 5% duplicate 1%
+```
+
+Add network parameters:
+``` bash
+$ sudo tc qdisc add dev lo root netem delay 50ms 10ms loss 5% corrupt 5% duplicate 1%
+```
+
+Remove parameters:
+``` bash
+$ sudo tc qdisc del dev lo root
 ```
 
 ## TODO:

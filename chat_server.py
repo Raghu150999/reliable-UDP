@@ -27,7 +27,7 @@ class Server:
             self.clients[addr] = Util(sc)
             Thread(target=self.handle_client, args=(sc, addr)).start()
     
-    def broadcast(self, msg, sender='system'):
+    def broadcast(self, msg, sender='SYSTEM'):
         '''
         Broadcast message to all participants
         Args:
