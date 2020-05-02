@@ -95,3 +95,16 @@ delay (ms) | jitter (ms) | loss (%) | TCP time(s) | RUDP time(s) | TCP data(MB) 
 ## Framework:
 
 <img src="plots/rudp-framework.png?raw=true" width="800">
+
+## Applications:
+
+### Minimalist Chat Server
+- start chat server: `$ python3 chat_server.py`
+- start client session (new terminal): `$ python3 chat_client.py --uname <client's username>`
+*Use same command, with different usernames on different terminals for multiple clients*
+
+### File transfer:
+- start file server: `$ python3 file_server.py`
+- start client file transfer `$ python3 file_client.py --filename test2.mp4`
+*Note: server serves all files inside the `public/` directory. `test2.mp4` is a file inside the `public/` directory*
+

@@ -41,9 +41,13 @@ class RUDPClient:
         self.listener.start()
         self.peer_addr = address
         self.write(pckt)
-        # Wait till connection is established
+        cnt = 0
+        # Wait till connection is established, wait for atmost cnt * POLL_INTERVAL (15s)
         while not self.connected:
+            cnt += 1
             time.sleep(POLL_INTERVAL)
+            if cnt >= 150:
+                raise Exception("Host unreachable!")
 
     def synack(self):
         '''

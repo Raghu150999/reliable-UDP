@@ -1,6 +1,7 @@
 from rudp.rudp_client import RUDPClient
 from utils import Util
 import time
+import argparse
 
 def client(addr, filename):
     sock = RUDPClient()
@@ -35,4 +36,8 @@ def client(addr, filename):
 
 
 if __name__ == "__main__":
-    client(("127.0.0.1", 8000), 'test2.mp4')
+    parser = argparse.ArgumentParser('Simple file client')
+    parser.add_argument('--filename', default='test2.mp4', type=str)
+    args = parser.parse_args()
+    
+    client(("127.0.0.1", 8000), args.filename)
