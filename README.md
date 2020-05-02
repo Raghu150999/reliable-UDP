@@ -64,11 +64,8 @@ $ sudo tc qdisc del dev lo root
 
 ## TODO:
 - convert write buffer to python queue
-- raise connection refused error if server is not accepting SYN requests
-- use mutex wherever possible, instead of sleep
 - implement piggy backed ack
 - implement fast retransmission on 3 dup acks
-- maintain max buffer size, block send if exceedes max buffer size
 
 ## Results:
 
